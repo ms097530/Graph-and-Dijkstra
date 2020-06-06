@@ -48,6 +48,11 @@ public:
 
 	virtual void addEdge(long int start, long int end, long int weight)
 	{
+		if (weight < 0)
+		{
+			cout << "Edges can not have negative weight" << endl;
+			return;
+		}
 		if (adjList[start].find(Edge(end, weight)) == adjList[start].end())
 			adjList[start].insert(Edge(end, weight));
 	}
