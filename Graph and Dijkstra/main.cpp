@@ -1,5 +1,3 @@
-
-
 /*
 TO DO:
 	1. add addVertex and removeVertex to Graph/Digraph
@@ -27,13 +25,14 @@ private:
 class Graph
 {
 public:
+	Graph(long int numVerts) : adjList(numVerts) { }
 	virtual void addEdge(long int start, long int end, long int weight) = 0;	//adds edge from start to end with given weight if no edge from start to end already exists
-	virtual void removeEdge(long int start, long int end) = 0;		//removes edge from start to end if it exists
+	virtual void removeEdge(long int start, long int end) = 0;			//removes edge from start to end if it exists
 	virtual long int weight(long int start, long int end) = 0;			//returns the weight of the edge going from start to end
 	friend long int* dijkstra(Graph*, long int, long int);
-	//private:
+protected:
 	vector<set<Edge>> adjList;
-	//int numVerts;
+	
 
 
 };
@@ -42,17 +41,13 @@ public:
 class DiGraph : public Graph
 {
 public:
-	//DiGraph() { };
-	DiGraph(long int num) { adjList = vector<set<Edge>>(num); }      //initializes adjList to an array (size num) of sets and 
-															   //size of vector (number of vertices) intialized to num
+	
+	DiGraph(long int numVerts) : Graph(numVerts) { }      
+	//initializes adjList to a vector (size num) of sets and 
+	//size of vector (number of vertices) intialized to num
 
 	virtual void addEdge(long int start, long int end, long int weight)
 	{
-		if (weight < 0)
-		{
-			cout << "Edges can not have negative weight" << endl;
-			return;
-		}
 		if (adjList[start].find(Edge(end, weight)) == adjList[start].end())
 			adjList[start].insert(Edge(end, weight));
 	}
@@ -65,18 +60,16 @@ public:
 	virtual long int weight(long int start, long int end)
 		//returns weight of the edge from start vertex to end vertex if it exists, 0 if no edge exists		
 	{
-		auto it = adjList[start].find(Edge(end, 1))/*.to()*/;   //search the set at adjList[start] to see if it contains an edge to end
+		auto it = adjList[start].find(Edge(end, 1));   //search the set at adjList[start] to see if it contains an edge to end
 		if (it != adjList[start].end())
 			return it->getWeight();
-		return std::numeric_limits<long int>::max() - 100;				//temporary error code - can replace with exception if value is important
+		return std::numeric_limits<long int>::max()-100;				//temporary error code - can replace with exception if value is important
 	}
 
-private:
-	//vector<set<Edge>> adjList;
-	//int numVerts;
+
 };
 
-enum Mark { UNVISITED, VISITED };
+enum class Mark { UNVISITED, VISITED };
 
 //helper function to get index of vertex with minimum distance
 long int minDist(Graph* G, long int num, long int* D, Mark* visitArr)
@@ -85,9 +78,9 @@ long int minDist(Graph* G, long int num, long int* D, Mark* visitArr)
 {
 	long int i, v = -1;
 	for (i = 0; i < num; ++i)
-		if (visitArr[i] == UNVISITED) { v = i; break; }
+		if (visitArr[i] == Mark::UNVISITED) { v = i; break; }
 	for (++i; i < num; ++i)
-		if (visitArr[i] == UNVISITED && D[i] < D[v])
+		if (visitArr[i] == Mark::UNVISITED && D[i] < D[v])
 			v = i;
 	return v;
 }
@@ -102,12 +95,12 @@ long int* dijkstra(Graph* G, long int num, long int S)
 // For user: REMEMBER TO DELETE RESULT ARRAY AFTER FINISHED WITH IT
 {
 	long int v;
-	constexpr long int INFIN = std::numeric_limits<long int>::max() - 100;
+	constexpr long int INFIN = std::numeric_limits<long int>::max()-100;
 	long int* distance = new long int[num];	//initialize distance values to "infinity"
 	for (long int i = 0; i < num; ++i)
 		distance[i] = INFIN;
 	distance[S] = 0; 				//set distance from source to 0
-	Mark* visit = new Mark[num]{ UNVISITED };
+	Mark* visit = new Mark[num]{ Mark::UNVISITED };
 
 	for (long int i = 0; i < num; ++i)
 	{
@@ -115,7 +108,7 @@ long int* dijkstra(Graph* G, long int num, long int S)
 
 		//Select the unvisited vertex with minimum distance from the source and mark it as visited
 		v = minDist(G, num, distance, visit);
-		visit[v] = VISITED;
+		visit[v] = Mark::VISITED;
 
 
 
@@ -126,7 +119,7 @@ long int* dijkstra(Graph* G, long int num, long int S)
 		//and if distances need relaxed (while accounting for potential overflow)
 		for (auto it = G->adjList[v].begin(); it != G->adjList[v].end(); ++it)
 		{
-			if (distance[it->getTo()] > distance[v] + G->weight(v, it->getTo()) && distance[v] != INFIN && visit[it->getTo()] != VISITED)
+			if (distance[it->getTo()] > distance[v] + G->weight(v, it->getTo()) && distance[v] != INFIN && visit[it->getTo()] != Mark::VISITED)
 			{
 				distance[it->getTo()] = distance[v] + G->weight(v, it->getTo());
 			}
@@ -193,6 +186,3 @@ int main()
 
 	return 0;
 }
-
-// dijkstra function runs but seems to be giving 1 for all shortest paths
-//      overflow? incorrect assignment?
